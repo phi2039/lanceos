@@ -1,3 +1,4 @@
+# This image is based on a Unversal Blue base image (ghcr.io/ublue-os/<BASE_IMAGE>:<TAG_VERSION>)
 ARG BASE_IMAGE="ucore-hci"
 ARG TAG_VERSION="stable"
 
