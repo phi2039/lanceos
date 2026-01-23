@@ -178,17 +178,17 @@ build image="bluefin" tag="":
     VERSION="{{ image }}-${fedora_version}.$(date +%Y%m%d)"
     echo "VERSION=$VERSION"
     echo "IMAGE=docker://ghcr.io/{{ repo_name }}/{{ repo_image_name }}"
-    skopeo list-tags docker://ghcr.io/{{ repo_name }}/{{ repo_image_name }} > /tmp/repotags.json
-    if [[ $(jq "any(.Tags[]; contains(\"$VERSION\"))" < /tmp/repotags.json) == "true" ]]; then
-        POINT="1"
-        while jq -e "any(.Tags[]; contains(\"$VERSION.$POINT\"))" < /tmp/repotags.json
-        do
-            (( POINT++ ))
-        done
-    fi
-    if [[ -n "${POINT:-}" ]]; then
-        VERSION="${VERSION}.$POINT"
-    fi
+    # skopeo list-tags docker://ghcr.io/{{ repo_name }}/{{ repo_image_name }} > /tmp/repotags.json
+    # if [[ $(jq "any(.Tags[]; contains(\"$VERSION\"))" < /tmp/repotags.json) == "true" ]]; then
+    #     POINT="1"
+    #     while jq -e "any(.Tags[]; contains(\"$VERSION.$POINT\"))" < /tmp/repotags.json
+    #     do
+    #         (( POINT++ ))
+    #     done
+    # fi
+    # if [[ -n "${POINT:-}" ]]; then
+    #     VERSION="${VERSION}.$POINT"
+    # fi
     BUILD_ARGS+=("--file" "Containerfile")
     BUILD_ARGS+=("--label" "org.opencontainers.image.title={{ repo_image_name_styled }}")
     BUILD_ARGS+=("--label" "org.opencontainers.image.version=$VERSION")
@@ -219,7 +219,7 @@ build image="bluefin" tag="":
     {{ PODMAN }} images
     echo "::endgroup::"
 
-    {{ PODMAN }} rmi ghcr.io/ublue-os/"${BASE_IMAGE}":"${TAG_VERSION}"
+    # {{ PODMAN }} rmi ghcr.io/ublue-os/"${BASE_IMAGE}":"${TAG_VERSION}"
 
 
 # Command: _rootful_load_image

@@ -1,5 +1,5 @@
 ARG BASE_IMAGE="ucore-hci"
-ARG TAG_VERSION="stable-daily"
+ARG TAG_VERSION="stable"
 
 # Allow build scripts to be referenced without being copied into the final image
 FROM scratch AS ctx
@@ -19,7 +19,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     # --mount=type=cache,dst=/var/log \
     # --mount=type=tmpfs,dst=/tmp \
     /ctx/build_files/build.sh
-    
+
 ### LINTING
 ## Verify final image and contents are correct.
 ## (this also causes a commit of the ostree container if applicable)
