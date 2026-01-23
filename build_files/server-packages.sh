@@ -15,8 +15,7 @@ if [[ ${IMAGE} =~ ucore-hci ]]; then
         dpkg \
         incus \
         incus-tools \
-        kubectl \
-        k3s-selinux
+        kubectl
 
     # Incus WebUI
     # TODO: Configure URLs centrally to handle version changes
@@ -46,13 +45,5 @@ if [[ ${IMAGE} =~ ucore-hci ]]; then
     # groupmod -g 250 incus-admin
     # groupmod -g 251 incus
 # end
-
-    # k3s
-    # TODO: Configure URLs centrally to handle version changes
-    K3S_URL=https://github.com/k3s-io/k3s/releases/download/v1.27.10%2Bk3s2/k3s
-    wget $K3S_URL -O /usr/local/bin/k3s
-    chmod 755 /usr/local/bin/k3s
-
-    systemctl enable k3s.service
 fi
 
