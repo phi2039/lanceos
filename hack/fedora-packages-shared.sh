@@ -1,0 +1,100 @@
+# Base packages (Fedora 39) from Fedora repos - common to all versions
+FEDORA_PACKAGES=(
+    adcli
+    adw-gtk3-theme
+    adwaita-fonts-all
+    bash-color-prompt
+    bcache-tools
+    bootc
+    borgbackup
+    containerd
+    cryfs
+    davfs2
+    ddcutil
+    evtest
+    fastfetch
+    firewall-config
+    fish
+    foo2zjs
+    fuse-encfs
+    gcc
+    git-credential-libsecret
+    glow
+    gnome-tweaks
+    gum
+    hplip
+    ibus-mozc
+    ifuse
+    igt-gpu-tools
+    input-remapper
+    iwd
+    jetbrains-mono-fonts-all
+    just
+    krb5-workstation
+    libgda
+    libgda-sqlite
+    libimobiledevice
+    libratbag-ratbagd
+    libsss_autofs
+    libxcrypt-compat
+    lm_sensors
+    make
+    mesa-libGLU
+    mozc
+    nautilus-gsconnect
+    oddjob-mkhomedir
+    opendyslexic-fonts
+    openssh-askpass
+    powerstat
+    powertop
+    printer-driver-brlaser
+    pulseaudio-utils
+    python3-pip
+    python3-pygit2
+    rclone
+    restic
+    samba
+    samba-dcerpc
+    samba-ldb-ldap-modules
+    samba-winbind-clients
+    samba-winbind-modules
+    setools-console
+    sssd-ad
+    sssd-krb5
+    sssd-nfs-idmap
+    switcheroo-control
+    tmux
+    usbip
+    usbmuxd
+    waypipe
+    wireguard-tools
+    wl-clipboard
+    xprop
+    zenity
+    zsh
+)
+
+# Version-specific Fedora (43) package additions
+FEDORA_PACKAGES+=(
+    evolution-ews-core
+    gnupg2-scdaemon
+)
+
+# Packages to exclude - common to all bluefin versions (Fedora 39)
+EXCLUDED_PACKAGES=(
+    fedora-bookmarks
+    fedora-chromium-config
+    fedora-chromium-config-gnome
+    firefox
+    firefox-langpacks
+    gnome-extensions-app
+    gnome-shell-extension-background-logo
+    gnome-software-rpm-ostree
+    gnome-terminal-nautilus
+    podman-docker
+    yelp
+)
+
+# Version-specific package exclusions (Fedora 43)
+EXCLUDED_PACKAGES+=(gnome-software cosign)
+

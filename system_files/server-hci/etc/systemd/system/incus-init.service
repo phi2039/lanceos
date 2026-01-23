@@ -1,0 +1,14 @@
+[Unit]
+Description=Initialize Incus
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/usr/bin/incus
+ConditionPathExists=!/var/lib/incus/database/global/db.bin
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c '/usr/libexec/incus-init.sh'
+
+[Install]
+WantedBy=multi-user.target

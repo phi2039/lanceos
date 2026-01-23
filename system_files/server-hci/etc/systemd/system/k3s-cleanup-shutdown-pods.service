@@ -1,0 +1,15 @@
+[Unit]
+Description=Install k3s dependencies
+Wants=network-online.target
+After=network-online.target
+Before=zincati.service
+ConditionPathExists=|!/usr/bin/kubectl
+ConditionPathExists=|!/usr/share/selinux/packages/k3s.pp
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=rpm-ostree install --apply-live --allow-inactive --assumeyes kubectl k3s-selinux
+
+[Install]
+WantedBy=multi-user.target

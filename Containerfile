@@ -1,40 +1,30 @@
+ARG BASE_IMAGE="ucore-hci"
+ARG IMAGE="ucore-hci"
+ARG TAG_VERSION="stable"
+ARG TAG_VARIANT="nvidia"
+
 # Allow build scripts to be referenced without being copied into the final image
 FROM scratch AS ctx
-COPY build_files /
+COPY build_files /build_files/
+COPY system_files /system_files/
 
 # Base Image
-FROM ghcr.io/ublue-os/bazzite:stable
+FROM ghcr.io/ublue-os/${BASE_IMAGE}:${TAG_VERSION}-${TAG_VARIANT}
 
-## Other possible base images include:
-# FROM ghcr.io/ublue-os/bazzite:latest
-# FROM ghcr.io/ublue-os/bluefin-nvidia:stable
-# 
-# ... and so on, here are more base images
-# Universal Blue Images: https://github.com/orgs/ublue-os/packages
-# Fedora base image: quay.io/fedora/fedora-bootc:41
-# CentOS base images: quay.io/centos-bootc/centos-bootc:stream10
-
-### [IM]MUTABLE /opt
-## Some bootable images, like Fedora, have /opt symlinked to /var/opt, in order to
-## make it mutable/writable for users. However, some packages write files to this directory,
-## thus its contents might be wiped out when bootc deploys an image, making it troublesome for
-## some packages. Eg, google-chrome, docker-desktop.
-##
-## Uncomment the following line if one desires to make /opt immutable and be able to be used
-## by the package manager.
-
-# RUN rm /opt && mkdir /opt
-
-### MODIFICATIONS
-## make modifications desired in your image and install packages by modifying the build.sh script
-## the following RUN directive does all the things required to run "build.sh" as recommended.
+ARG BASE_IMAGE="ucore-hci"
+ARG IMAGE="ucore-hci"
+ARG SET_X=""
+ARG VERSION="stable"
+ARG VARIANT="nvidia"
+ARG DNF="dnf5"
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
-    --mount=type=cache,dst=/var/cache \
-    --mount=type=cache,dst=/var/log \
-    --mount=type=tmpfs,dst=/tmp \
-    /ctx/build.sh
+    # --mount=type=cache,dst=/var/cache \
+    # --mount=type=cache,dst=/var/log \
+    # --mount=type=tmpfs,dst=/tmp \
+    /ctx/build_files/build.sh
     
 ### LINTING
 ## Verify final image and contents are correct.
+## (this also causes a commit of the ostree container if applicable)
 RUN bootc container lint

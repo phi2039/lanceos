@@ -2,23 +2,55 @@
 
 set -ouex pipefail
 
-### Install packages
+# Version-specific changes and packages
+case "${IMAGE}" in
+"aurora"* | "bluefin"*)
+    echo "::group:: ===Desktop Changes==="
+    /ctx/build_files/desktop-changes.sh
+    echo "::endgroup::"
 
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
+    echo "::group:: ===Desktop Packages==="
+    /ctx/build_files/desktop-packages.sh
+    echo "::endgroup::"
+    ;;
+"bazzite"*)
+    echo "::group:: ===Desktop Changes==="
+    /ctx/build_files/desktop-changes.sh
+    echo "::endgroup::"
 
-# this installs a package from fedora repos
-dnf5 install -y tmux 
+    echo "::group:: ===Desktop Packages==="
+    /ctx/build_files/desktop-packages.sh
+    echo "::endgroup::"
+    ;;
+"ucore"*)
+    echo "::group:: ===Server Changes==="
+    /ctx/build_files/server-changes.sh
+    echo "::endgroup::"
 
-# Use a COPR Example:
-#
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
+    echo "::group:: ===Server Packages==="
+    /ctx/build_files/server-packages.sh
+    echo "::endgroup::"
+    ;;
+esac
 
-#### Example for enabling a System Unit File
+# Common changes and packages
+echo "::group:: ===Common Changes==="
+/ctx/build_files/common-changes.sh
+echo "::endgroup::"
 
-systemctl enable podman.socket
+echo "::group:: ===Common Packages==="
+/ctx/build_files/common-packages.sh
+echo "::endgroup::"
+
+#echo "::group:: ===Branding Changes==="
+#/ctx/build_files/branding.sh
+#echo "::endgroup::"
+
+# echo "::group:: ===Container Signing==="
+# /ctx/build_files/configure-signing.sh
+# echo "::endgroup::"
+
+# Clean Up
+echo "::group:: ===Cleanup==="
+/ctx/build_files/cleanup.sh
+echo "::endgroup::"
