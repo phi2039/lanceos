@@ -1,7 +1,5 @@
 ARG BASE_IMAGE="ucore-hci"
-ARG IMAGE="ucore-hci"
-ARG TAG_VERSION="stable"
-ARG TAG_VARIANT="nvidia"
+ARG TAG_VERSION="stable-daily"
 
 # Allow build scripts to be referenced without being copied into the final image
 FROM scratch AS ctx
@@ -9,13 +7,11 @@ COPY build_files /build_files/
 COPY system_files /system_files/
 
 # Base Image
-FROM ghcr.io/ublue-os/${BASE_IMAGE}:${TAG_VERSION}-${TAG_VARIANT}
+FROM ghcr.io/ublue-os/${BASE_IMAGE}:${TAG_VERSION}
 
-ARG BASE_IMAGE="ucore-hci"
 ARG IMAGE="ucore-hci"
 ARG SET_X=""
-ARG VERSION="stable"
-ARG VARIANT="nvidia"
+ARG VERSION=""
 ARG DNF="dnf5"
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \

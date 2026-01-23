@@ -2,6 +2,35 @@ export image_name := env("IMAGE_NAME", "image-template") # output image name, us
 export default_tag := env("DEFAULT_TAG", "latest")
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
 
+repo_image_name_styled := "lanceOS"
+repo_image_name := "lanceos"
+repo_name := "phi2039"
+username := "phi2039"
+images := '(
+    [aurora]="aurora"
+    [aurora-nvidia]="aurora-nvidia"
+    [bazzite]="bazzite-gnome"
+    [bazzite-nvidia]="bazzite-gnome-nvidia"
+    [bazzite-deck]="bazzite-deck-gnome"
+    [bazzite-deck-nvidia]="bazzite-deck-nvidia-gnome"
+    [bluefin-latest]="bluefin-dx"
+    [bluefin-latest-nvidia]="bluefin-dx-nvidia-open"
+    [bluefin-gdx]="bluefin-gdx"
+    [bluefin-lts]="bluefin-dx"
+    [bluefin]="bluefin-dx"
+    [bluefin-nvidia]="bluefin-dx-nvidia-open"
+    [ucore-minimal]="stable"
+    [ucore-hci]="stable"
+    [ucore-hci-nvidia]="stable-nvidia"
+    [ucore]="stable"
+    [ucore-nvidia]="stable-nvidia"
+)'
+
+export SUDO_DISPLAY := if `if [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then echo true; fi` == "true" { "true" } else { "false" }
+export SUDOIF := if `id -u` == "0" { "" } else if SUDO_DISPLAY == "true" { "sudo --askpass" } else { "sudo" }
+export SET_X := if `id -u` == "0" { "1" } else { env('SET_X', '') }
+export PODMAN := if path_exists("/usr/bin/podman") == "true" { env("PODMAN", "/usr/bin/podman") } else if path_exists("/usr/bin/docker") == "true" { env("PODMAN", "docker") } else { env("PODMAN", "exit 1 ; ") }
+
 alias build-vm := build-qcow2
 alias rebuild-vm := rebuild-qcow2
 alias run-vm := run-vm-qcow2
@@ -86,19 +115,112 @@ sudoif command *args:
 #
 
 # Build the image using the specified parameters
-build $target_image=image_name $tag=default_tag:
+build image="bluefin" tag="":
     #!/usr/bin/env bash
-
-    BUILD_ARGS=()
-    if [[ -z "$(git status -s)" ]]; then
-        BUILD_ARGS+=("--build-arg" "SHA_HEAD_SHORT=$(git rev-parse --short HEAD)")
+    echo "::group:: Container Build Prep"
+    set ${SET_X:+-x} -eou pipefail
+    declare -A images={{ images }}
+    check=${images[{{ image }}]-}
+    if [[ -z "$check" ]]; then
+        exit 1
     fi
+    BUILD_ARGS=()
+    DIST_ABRV=fc
+    DNF=dnf5
 
-    podman build \
-        "${BUILD_ARGS[@]}" \
-        --pull=newer \
-        --tag "${target_image}:${tag}" \
-        .
+    case "{{ image }}" in
+    "bluefin-gdx"*|"bluefin-lts"*)
+        BASE_IMAGE="${check}"
+        TAG_VERSION=lts
+        DIST_ABRV=el
+        DNF=dnf
+        ;;
+    "aurora-latest"*|"bluefin-latest"*)
+        BASE_IMAGE="${check}"
+        TAG_VERSION=latest
+        ;;
+    "aurora"*|"bluefin"*)
+        BASE_IMAGE="${check}"
+        TAG_VERSION=stable-daily
+        ;;
+    "bazzite"*)
+        BASE_IMAGE="${check}"
+        TAG_VERSION=stable
+        ;;
+    "ucore-minimal"*)
+        BASE_IMAGE=ucore-minimal
+        TAG_VERSION="${check}"
+        ;;
+    "ucore-hci"*)
+        BASE_IMAGE=ucore-hci
+        TAG_VERSION="${check}"
+        ;;
+    "ucore"*)
+        BASE_IMAGE=ucore
+        TAG_VERSION="${check}"
+        ;;
+    esac
+
+    # case "{{ image }}" in
+    # "ucore"*)
+    #     just verify-container "${BASE_IMAGE}":"${TAG_VERSION}"
+    #     fedora_version="$(skopeo inspect docker://ghcr.io/ublue-os/"${BASE_IMAGE}":"${TAG_VERSION}" | jq -r '.Labels["org.opencontainers.image.version"]' | grep -oP '^\K[0-9]+')"
+    #     ;;
+    # *)
+    #     just verify-container "${BASE_IMAGE}":"${TAG_VERSION}"
+    #     echo "IMAGE=docker://ghcr.io/ublue-os/${BASE_IMAGE}":"${TAG_VERSION}"
+    #     skopeo inspect docker://ghcr.io/ublue-os/"${BASE_IMAGE}":"${TAG_VERSION}" > /tmp/inspect-"{{ image }}".json
+    #     fedora_version="$(jq -r '.Labels["org.opencontainers.image.version"]' < /tmp/inspect-{{ image }}.json | grep -oP '^\K[0-9]+')"
+    #     ;;
+    # esac
+
+    fedora_version="42"
+    VERSION="{{ image }}-${fedora_version}.$(date +%Y%m%d)"
+    echo "VERSION=$VERSION"
+    echo "IMAGE=docker://ghcr.io/{{ repo_name }}/{{ repo_image_name }}"
+    skopeo list-tags docker://ghcr.io/{{ repo_name }}/{{ repo_image_name }} > /tmp/repotags.json
+    if [[ $(jq "any(.Tags[]; contains(\"$VERSION\"))" < /tmp/repotags.json) == "true" ]]; then
+        POINT="1"
+        while jq -e "any(.Tags[]; contains(\"$VERSION.$POINT\"))" < /tmp/repotags.json
+        do
+            (( POINT++ ))
+        done
+    fi
+    if [[ -n "${POINT:-}" ]]; then
+        VERSION="${VERSION}.$POINT"
+    fi
+    BUILD_ARGS+=("--file" "Containerfile")
+    BUILD_ARGS+=("--label" "org.opencontainers.image.title={{ repo_image_name_styled }}")
+    BUILD_ARGS+=("--label" "org.opencontainers.image.version=$VERSION")
+    BUILD_ARGS+=("--label" "org.opencontainers.image.description={{ repo_image_name }} is my OCI image built from ublue projects. It mainly extends them for my uses.")
+    BUILD_ARGS+=("--build-arg" "IMAGE={{ image }}")
+    BUILD_ARGS+=("--build-arg" "BASE_IMAGE=$BASE_IMAGE")
+    BUILD_ARGS+=("--build-arg" "TAG_VERSION=$TAG_VERSION")
+    BUILD_ARGS+=("--build-arg" "SET_X=${SET_X:-}")
+    BUILD_ARGS+=("--build-arg" "VERSION=$VERSION")
+    BUILD_ARGS+=("--build-arg" "DNF=$DNF")
+    BUILD_ARGS+=("--tag" "localhost/{{ repo_image_name }}:{{ image }}")
+    if [[ {{ PODMAN }} =~ podman ]]; then
+        BUILD_ARGS+=("--pull=newer")
+    elif [[ {{ PODMAN }} =~ docker ]]; then
+        BUILD_ARGS+=("--pull=missing")
+        if [[ "${TERM}" == "dumb" ]]; then
+            BUILD_ARGS+=("--progress" "plain")
+        fi
+    fi
+    echo "::endgroup::"
+
+    echo "::group:: Container Build"
+    {{ PODMAN }} build "${BUILD_ARGS[@]}" .
+    echo "::endgroup::"
+
+    echo "::group:: Tag Image with Version"
+    {{ PODMAN }} tag localhost/{{ repo_image_name }}:{{ image }} localhost/{{ repo_image_name }}:${VERSION}
+    {{ PODMAN }} images
+    echo "::endgroup::"
+
+    {{ PODMAN }} rmi ghcr.io/ublue-os/"${BASE_IMAGE}":"${TAG_VERSION}"
+
 
 # Command: _rootful_load_image
 # Description: This script checks if the current user is root or running under sudo. If not, it attempts to resolve the image tag using podman inspect.
@@ -295,6 +417,7 @@ spawn-vm rebuild="0" type="qcow2" ram="6G":
 
 
 # Runs shell check on all Bash scripts
+[group('Utility')]
 lint:
     #!/usr/bin/env bash
     set -eoux pipefail
@@ -307,13 +430,46 @@ lint:
     /usr/bin/find . -iname "*.sh" -type f -exec shellcheck "{}" ';'
 
 # Runs shfmt on all Bash scripts
+[group('Utility')]
 format:
     #!/usr/bin/env bash
     set -eoux pipefail
     # Check if shfmt is installed
     if ! command -v shfmt &> /dev/null; then
-        echo "shellcheck could not be found. Please install it."
+        echo "shfmt could not be found. Please install it."
         exit 1
     fi
     # Run shfmt on all Bash scripts
     /usr/bin/find . -iname "*.sh" -type f -exec shfmt --write "{}" ';'
+
+# Verify Container with Cosign
+[group('Utility')]
+verify-container container="" registry="ghcr.io/ublue-os" key="":
+    #!/usr/bin/env bash
+    set ${SET_X:+-x} -eou pipefail
+    # Get Cosign if Needed
+    if [[ ! $(command -v cosign) ]]; then
+        COSIGN_CONTAINER_ID=$({{ SUDOIF }} {{ PODMAN }} create ghcr.io/sigstore/cosign/cosign:v2.6.1 bash)
+        {{ SUDOIF }} {{ PODMAN }} cp "${COSIGN_CONTAINER_ID}":/ko-app/cosign /usr/local/bin/cosign
+        {{ SUDOIF }} {{ PODMAN }} rm -f "${COSIGN_CONTAINER_ID}"
+    fi
+
+    # Verify Cosign Image Signatures if needed
+    if [[ -n "${COSIGN_CONTAINER_ID:-}" ]]; then
+        if ! cosign verify --certificate-oidc-issuer=https://token.actions.githubusercontent.com --certificate-identity=https://github.com/chainguard-images/images/.github/workflows/release.yaml@refs/heads/main cgr.dev/chainguard/cosign >/dev/null; then
+            echo "NOTICE: Failed to verify cosign image signatures."
+            exit 1
+        fi
+    fi
+
+    # Public Key for Container Verification
+    key={{ key }}
+    if [[ -z "${key:-}" && "{{ registry }}" == "ghcr.io/ublue-os" ]]; then
+        key="https://raw.githubusercontent.com/ublue-os/main/main/cosign.pub"
+    fi
+
+    # Verify Container using cosign public key
+    if ! cosign verify --key "${key}" "{{ registry }}"/"{{ container }}" >/dev/null; then
+        echo "NOTICE: Verification failed. Please ensure your public key is correct."
+        exit 1
+    fi
