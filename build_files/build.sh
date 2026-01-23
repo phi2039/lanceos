@@ -2,6 +2,7 @@
 
 set -ouex pipefail
 
+# TODO: Refactor scripts into "packages" organized by application (branch in each to handle variations by target image)
 # Version-specific changes and packages
 case "${IMAGE}" in
 "aurora"* | "bluefin"*)
