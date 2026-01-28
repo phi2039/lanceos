@@ -7,14 +7,14 @@
 
 sudo rpm-ostree install --apply-live 'podman-bootc >= 0.5.0'
 
-podman machine init --rootful --now podman-machine-lanceos-test
+podman machine init --rootful --now podman-machine-default
 # OR
-podman machine start podman-machine-lanceos-test
+podman machine start podman-machine-default
 
 # Change $PWD (Containerfile location) as appropriate
-podman -c podman-machine-lanceos-test build -t ghcr.io/phi2039/lanceos/latest $PWD
+podman -c podman-machine-default build -t ghcr.io/phi2039/lanceos/latest $PWD
 
-podman-bootc run --background --filesystem xfs ghcr.io/phi2039/lanceos:latest
+podman-bootc run --background --filesystem xfs ghcr.io/phi2039/lanceos-server-hvi-nvidia:stable
 POD_ID=$(podman-bootc list | awk 'NR > 1 {print $1}')
 podman-bootc ssh $POD_ID
 

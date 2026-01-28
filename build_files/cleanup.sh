@@ -3,6 +3,7 @@
 
 set ${SET_X:+-x} -eou pipefail
 
+# TODO: Curate these...
 repos=(
     charm.repo
     docker-ce.repo
@@ -32,7 +33,7 @@ for repo in "${repos[@]}"; do
     fi
 done
 
-if [[ ! "${IMAGE}" =~ ucore ]]; then
+if [[ ! "${TARGET_NAME}" =~ server ]]; then
     coprs=()
     mapfile -t coprs <<<"$(find /etc/yum.repos.d/_copr*.repo)"
     for copr in "${coprs[@]}"; do
@@ -41,8 +42,3 @@ if [[ ! "${IMAGE}" =~ ucore ]]; then
 fi
 
 $DNF clean all
-
-rm -rf /tmp/*
-rm -rf /var/*
-mkdir -p /tmp
-mkdir -p /var/tmp && chmod -R 1777 /var/tmp

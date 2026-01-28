@@ -1,0 +1,59 @@
+
+# TODO: Pin upstream image digests? What about variants? Lifecycle?
+images:
+  tags:
+    - name: stable
+    - name: stable-daily
+    - name: testing
+
+  targets:
+    - name: server
+      upstream-image: ghcr.io/ublue-os/ucore
+      tags:
+        - name: stable
+          upstream-name: stable
+        - name: testing
+          upstream-name: stable
+      variants:
+        - name: cloud
+          upstream-image: ghcr.io/ublue-os/ucore-minimal
+        - name: hci
+          upstream-image: ghcr.io/ublue-os/ucore-hci
+          configurations:
+            - name: nvidia
+              tags:
+                - name: stable
+                  upstream-name: stable-nvidia
+                - name: testing
+                  upstream-name: stable-nvidia
+
+    - name: desktop
+      tags:
+        - name: stable
+          upstream-name: stable
+        - name: stable-daily
+          upstream-name: stable-daily
+        - name: testing
+          upstream-name: stable
+      variants:
+        - name: developer
+          upstream-image: ghcr.io/ublue-os/bluefin-dx
+          configurations:
+            - name: nvidia
+              upstream-image: ghcr.io/ublue-os/bluefin-dx-nvidia-open
+        - name: workstation
+          upstream-image: ghcr.io/ublue-os/aurora
+          configurations:
+            - name: nvidia
+              upstream-image: ghcr.io/ublue-os/aurora-nvidia-open
+
+    - name: gaming
+      upstream-image: ghcr.io/ublue-os/bazzite
+      tags:
+        - name: stable
+          upstream-name: stable
+      variants:
+        - name: console
+          configurations:
+            - name: nvidia
+              upstream-image: ghcr.io/ublue-os/bazzite-nvidia-open

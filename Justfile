@@ -1,9 +1,12 @@
-export image_name := env("IMAGE_NAME", "lanceos") # output image name, usually same as repo name, change as needed
+
 export default_tag := env("DEFAULT_TAG", "latest")
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
 
+export repo_organization := env("GITHUB_REPOSITORY_OWNER", "phi2039")
+export image_name := env("IMAGE_NAME", "lanceos")
+
 repo_image_name_styled := "lanceOS"
-repo_image_name := "lanceos"
+export repo_image_name := "lanceos"
 repo_name := "phi2039"
 username := "phi2039"
 images := '(
@@ -83,7 +86,7 @@ sudo-clean:
 [group('Utility')]
 [private]
 sudoif command *args:
-    #!/usr/bin/bash
+    #!/usr/bin/bash/
     function sudoif(){
         if [[ "${UID}" -eq 0 ]]; then
             "$@"
@@ -96,6 +99,87 @@ sudoif command *args:
         fi
     }
     sudoif {{ command }} {{ args }}
+
+# This Justfile recipe builds a container image using Podman.
+#
+# Arguments:
+#   $target
+#   $variant
+#   $configuration
+#   $tag
+#
+#
+# WIP
+build-new target="server" variant="hci" configuration="nvidia" tag="stable":
+    #!/usr/bin/env bash
+
+    set ${SET_X:+-x} -eou pipefail
+
+    IMAGE_DESCRIPTOR="{
+    \"image_name\": \"server-hci-nvidia\",
+    \"tag\": \"stable\",
+    \"upstream_image\": \"ghcr.io/ublue-os/ucore-hci\",
+    \"upstream_tag\": \"stable-nvidia\",
+    \"target\": \"server\",
+    \"variant\": \"hci\",
+    \"configuration\": \"nvidia\"
+    }"
+    
+    BUILD_ARGS=()
+
+    target_image=$(echo "$IMAGE_DESCRIPTOR" | jq -r ".image_name")
+    target_tag=$(echo "$IMAGE_DESCRIPTOR" | jq -r ".tag")
+
+    upstream_image=$(echo "$IMAGE_DESCRIPTOR" | jq -r ".upstream_image")
+    upstream_tag=$(echo "$IMAGE_DESCRIPTOR" | jq -r ".upstream_tag")
+
+    target_name=$(echo "$IMAGE_DESCRIPTOR" | jq -r ".target")
+    variant_name=$(echo "$IMAGE_DESCRIPTOR" | jq -r ".variant")
+    configuration_name=$(echo "$IMAGE_DESCRIPTOR" | jq -r ".configuration")
+
+    # TODO: Validate paramaters
+    # if [[ -z $image ]]; then
+    #     echo "Possible typo. The image '$target_image' did not exist in 'images.yml'."
+    #     exit 1
+    # fi
+
+    BUILD_ARGS+=("--build-arg" "UPSTREAM_IMAGE=${upstream_image}")
+    BUILD_ARGS+=("--build-arg" "UPSTREAM_TAG=${upstream_tag}")
+
+    BUILD_ARGS+=("--build-arg" "TARGET_NAME=${target_name}")
+    BUILD_ARGS+=("--build-arg" "VARIANT_NAME=${variant_name}")
+    BUILD_ARGS+=("--build-arg" "CONFIGURATION_NAME=${configuration_name}")
+    BUILD_ARGS+=("--build-arg" "TARGET_TAG=${target_tag}")
+
+    # Include SHA if working directory is clean
+    if [[ -z "$(git status -s)" ]]; then
+        BUILD_ARGS+=("--build-arg" "SHA_HEAD_SHORT=$(git rev-parse --short HEAD)")
+    fi
+
+    # Labels
+    LABELS=()
+    LABELS+=("--label" "org.opencontainers.image.created=$(date -u +%Y\-%m\-%d\T%H\:%M\:%S\Z)")
+    LABELS+=("--label" "org.opencontainers.image.description=${IMAGE_DESC:+""}")
+    LABELS+=("--label" "org.opencontainers.image.documentation=https://raw.githubusercontent.com/${repo_organization}/${repo_image_name}-${target_image}/refs/heads/main/README.md")
+    LABELS+=("--label" "org.opencontainers.image.source=https://raw.githubusercontent.com/${repo_organization}/${repo_image_name}-${target_image}/refs/heads/main/Containerfile")
+    LABELS+=("--label" "org.opencontainers.image.title=${repo_image_name}-${target_image}")
+    LABELS+=("--label" "org.opencontainers.image.url=https://github.com/${repo_organization}/${repo_image_name}-${target_image}")
+    LABELS+=("--label" "org.opencontainers.image.vendor=${repo_organization}")
+    LABELS+=("--label" "org.opencontainers.image.version=${repo_image_name}-${target_image}.$(date -u +%Y\-%m\-%d)")
+    LABELS+=("--label" "containers.bootc=1")
+
+    podman build \
+        --file Containerfile \
+        "${BUILD_ARGS[@]}" \
+        "${LABELS[@]}" \
+        --pull=newer \
+        --tag "localhost/${repo_image_name}-${target_image}:${target_tag}" \
+        {{ justfile_dir() }}
+
+    podman tag localhost/${repo_image_name}-${target_image}:${target_tag} \
+        ghcr.io/${repo_organization}/${repo_image_name}-${target_image}:${target_tag} \
+        ghcr.io/${repo_organization}/${repo_image_name}-${target_image}:${target_tag}.$(date -u +%Y\-%m\-%d)
+    podman images
 
 # This Justfile recipe builds a container image using Podman.
 #

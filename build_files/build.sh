@@ -4,26 +4,8 @@ set -ouex pipefail
 
 # TODO: Refactor scripts into "packages" organized by application (branch in each to handle variations by target image)
 # Version-specific changes and packages
-case "${IMAGE}" in
-"aurora"* | "bluefin"*)
-    echo "::group:: ===Desktop Changes==="
-    /ctx/build_files/desktop-changes.sh
-    echo "::endgroup::"
-
-    echo "::group:: ===Desktop Packages==="
-    /ctx/build_files/desktop-packages.sh
-    echo "::endgroup::"
-    ;;
-"bazzite"*)
-    echo "::group:: ===Desktop Changes==="
-    /ctx/build_files/desktop-changes.sh
-    echo "::endgroup::"
-
-    echo "::group:: ===Desktop Packages==="
-    /ctx/build_files/desktop-packages.sh
-    echo "::endgroup::"
-    ;;
-"ucore"*)
+case "${TARGET_NAME}" in
+"server"*)
     echo "::group:: ===Server Changes==="
     /ctx/build_files/server-changes.sh
     echo "::endgroup::"
@@ -31,6 +13,24 @@ case "${IMAGE}" in
     echo "::group:: ===Server Packages==="
     /ctx/build_files/server-packages.sh
     echo "::endgroup::"
+    ;;
+"desktop"*)
+    echo "::group:: ===Desktop Changes==="
+    /ctx/build_files/desktop-changes.sh
+    echo "::endgroup::"
+
+    echo "::group:: ===Desktop Packages==="
+    /ctx/build_files/desktop-packages.sh
+    echo "::endgroup::"
+    ;;
+"gaming"*)
+    # echo "::group:: ===Gaming Changes==="
+    # /ctx/build_files/gaming-changes.sh
+    # echo "::endgroup::"
+
+    # echo "::group:: ===Gaming Packages==="
+    # /ctx/build_files/gaming-packages.sh
+    # echo "::endgroup::"
     ;;
 esac
 

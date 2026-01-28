@@ -5,7 +5,7 @@ set ${SET_X:+-x} -eou pipefail
 # Copy system files
 rsync -rvK /ctx/system_files/server/ /
 
-if [[ ${IMAGE} =~ ucore-hci ]]; then
+if [[ ${VARIANT_NAME} =~ hci ]]; then
     rsync -rvK /ctx/system_files/server-hci/ /
 fi
 

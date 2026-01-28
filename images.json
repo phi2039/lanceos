@@ -1,0 +1,202 @@
+[
+  {
+    "target": "server",
+    "variant": "cloud",
+    "configuration": null,
+    "image_name": "server-cloud",
+    "upstream_image": "ghcr.io/ublue-os/ucore-minimal",
+    "tag": "stable",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "server",
+    "variant": "cloud",
+    "configuration": null,
+    "image_name": "server-cloud",
+    "upstream_image": "ghcr.io/ublue-os/ucore-minimal",
+    "tag": "testing",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "server",
+    "variant": "hci",
+    "configuration": null,
+    "image_name": "server-hci",
+    "upstream_image": "ghcr.io/ublue-os/ucore-hci",
+    "tag": "stable",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "server",
+    "variant": "hci",
+    "configuration": null,
+    "image_name": "server-hci",
+    "upstream_image": "ghcr.io/ublue-os/ucore-hci",
+    "tag": "testing",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "server",
+    "variant": "hci",
+    "configuration": "nvidia",
+    "image_name": "server-hci-nvidia",
+    "upstream_image": "ghcr.io/ublue-os/ucore-hci",
+    "tag": "stable",
+    "upstream_tag": "stable-nvidia"
+  }
+,
+  {
+    "target": "server",
+    "variant": "hci",
+    "configuration": "nvidia",
+    "image_name": "server-hci-nvidia",
+    "upstream_image": "ghcr.io/ublue-os/ucore-hci",
+    "tag": "testing",
+    "upstream_tag": "stable-nvidia"
+  }
+,
+  {
+    "target": "desktop",
+    "variant": "developer",
+    "configuration": null,
+    "image_name": "desktop-developer",
+    "upstream_image": "ghcr.io/ublue-os/bluefin-dx",
+    "tag": "stable",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "desktop",
+    "variant": "developer",
+    "configuration": null,
+    "image_name": "desktop-developer",
+    "upstream_image": "ghcr.io/ublue-os/bluefin-dx",
+    "tag": "stable-daily",
+    "upstream_tag": "stable-daily"
+  }
+,
+  {
+    "target": "desktop",
+    "variant": "developer",
+    "configuration": null,
+    "image_name": "desktop-developer",
+    "upstream_image": "ghcr.io/ublue-os/bluefin-dx",
+    "tag": "testing",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "desktop",
+    "variant": "developer",
+    "configuration": "nvidia",
+    "image_name": "desktop-developer-nvidia",
+    "upstream_image": "ghcr.io/ublue-os/bluefin-dx-nvidia-open",
+    "tag": "stable",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "desktop",
+    "variant": "developer",
+    "configuration": "nvidia",
+    "image_name": "desktop-developer-nvidia",
+    "upstream_image": "ghcr.io/ublue-os/bluefin-dx-nvidia-open",
+    "tag": "stable-daily",
+    "upstream_tag": "stable-daily"
+  }
+,
+  {
+    "target": "desktop",
+    "variant": "developer",
+    "configuration": "nvidia",
+    "image_name": "desktop-developer-nvidia",
+    "upstream_image": "ghcr.io/ublue-os/bluefin-dx-nvidia-open",
+    "tag": "testing",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "desktop",
+    "variant": "workstation",
+    "configuration": null,
+    "image_name": "desktop-workstation",
+    "upstream_image": "ghcr.io/ublue-os/aurora",
+    "tag": "stable",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "desktop",
+    "variant": "workstation",
+    "configuration": null,
+    "image_name": "desktop-workstation",
+    "upstream_image": "ghcr.io/ublue-os/aurora",
+    "tag": "stable-daily",
+    "upstream_tag": "stable-daily"
+  }
+,
+  {
+    "target": "desktop",
+    "variant": "workstation",
+    "configuration": null,
+    "image_name": "desktop-workstation",
+    "upstream_image": "ghcr.io/ublue-os/aurora",
+    "tag": "testing",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "desktop",
+    "variant": "workstation",
+    "configuration": "nvidia",
+    "image_name": "desktop-workstation-nvidia",
+    "upstream_image": "ghcr.io/ublue-os/aurora-nvidia-open",
+    "tag": "stable",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "desktop",
+    "variant": "workstation",
+    "configuration": "nvidia",
+    "image_name": "desktop-workstation-nvidia",
+    "upstream_image": "ghcr.io/ublue-os/aurora-nvidia-open",
+    "tag": "stable-daily",
+    "upstream_tag": "stable-daily"
+  }
+,
+  {
+    "target": "desktop",
+    "variant": "workstation",
+    "configuration": "nvidia",
+    "image_name": "desktop-workstation-nvidia",
+    "upstream_image": "ghcr.io/ublue-os/aurora-nvidia-open",
+    "tag": "testing",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "gaming",
+    "variant": "console",
+    "configuration": null,
+    "image_name": "gaming-console",
+    "upstream_image": "ghcr.io/ublue-os/bazzite",
+    "tag": "stable",
+    "upstream_tag": "stable"
+  }
+,
+  {
+    "target": "gaming",
+    "variant": "console",
+    "configuration": "nvidia",
+    "image_name": "gaming-console-nvidia",
+    "upstream_image": "ghcr.io/ublue-os/bazzite-nvidia-open",
+    "tag": "stable",
+    "upstream_tag": "stable"
+  }
+
+]
