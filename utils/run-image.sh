@@ -12,9 +12,9 @@ podman machine init --rootful --now podman-machine-default
 podman machine start podman-machine-default
 
 # Change $PWD (Containerfile location) as appropriate
-podman -c podman-machine-default build -t ghcr.io/phi2039/lanceos/latest $PWD
+podman -c podman-machine-default build -t lanceos-server-hci-nvidia:stable $PWD
 
-podman-bootc run --background --filesystem xfs ghcr.io/phi2039/lanceos-server-hvi-nvidia:stable
+podman-bootc run --background --filesystem xfs lanceos-server-hci-nvidia:stable
 POD_ID=$(podman-bootc list | awk 'NR > 1 {print $1}')
 podman-bootc ssh $POD_ID
 

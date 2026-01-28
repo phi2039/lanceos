@@ -110,7 +110,7 @@ sudoif command *args:
 #
 #
 # WIP
-build-new target="server" variant="hci" configuration="nvidia" tag="stable":
+build target="server" variant="hci" configuration="nvidia" tag="stable":
     #!/usr/bin/env bash
 
     set ${SET_X:+-x} -eou pipefail
@@ -173,10 +173,10 @@ build-new target="server" variant="hci" configuration="nvidia" tag="stable":
         "${BUILD_ARGS[@]}" \
         "${LABELS[@]}" \
         --pull=newer \
-        --tag "localhost/${repo_image_name}-${target_image}:${target_tag}" \
+        --tag "${repo_image_name}-${target_image}:${target_tag}" \
         {{ justfile_dir() }}
 
-    podman tag localhost/${repo_image_name}-${target_image}:${target_tag} \
+    podman tag ${repo_image_name}-${target_image}:${target_tag} \
         ghcr.io/${repo_organization}/${repo_image_name}-${target_image}:${target_tag} \
         ghcr.io/${repo_organization}/${repo_image_name}-${target_image}:${target_tag}.$(date -u +%Y\-%m\-%d)
     podman images
@@ -199,7 +199,7 @@ build-new target="server" variant="hci" configuration="nvidia" tag="stable":
 #
 
 # Build the image using the specified parameters
-build image="bluefin" tag="":
+build-old image="bluefin" tag="":
     #!/usr/bin/env bash
     echo "::group:: Container Build Prep"
     set ${SET_X:+-x} -eou pipefail
