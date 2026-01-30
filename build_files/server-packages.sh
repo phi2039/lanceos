@@ -19,30 +19,29 @@ if [[ ${VARIANT_NAME} =~ hci ]]; then
         kubectl
 
     # Incus WebUI
-    # TODO: Configure URLs centrally to handle version changes
-    # INCUS_UI_URL=https://pkgs.zabbly.com/incus/stable/pool/main/i/incus/incus-ui-canonical_6.20-debian13-202601150536_amd64.deb
-    # wget $INCUS_UI_URL
-    # INCUS_PKG=$(basename "$INCUS_UI_URL")
-    # dpkg -x $INCUS_PKG ./incus-ui/
-    # rsync -vaH incus-ui/opt/incus/. /usr/lib/opt/incus/
-    # rm -rf $INCUS_PKG incus-ui/
+    INCUS_UI_URL=https://pkgs.zabbly.com/incus/stable/pool/main/i/incus/"$(curl https://pkgs.zabbly.com/incus/stable/pool/main/i/incus/ | grep -E incus-ui-canonical | cut -d '"' -f 2 | sort -r | head -1)"
+    wget $INCUS_UI_URL
+    INCUS_PKG=$(basename "$INCUS_UI_URL")
+    dpkg -x $INCUS_PKG ./incus-ui/
+    rsync -vaH incus-ui/opt/incus/. /usr/lib/opt/incus/
+    rm -rf $INCUS_PKG incus-ui/
 
 # Alternative Incus UI installation method
     # Incus UI
-    curl -Lo /tmp/incus-ui-canonical.deb \
-        https://pkgs.zabbly.com/incus/stable/pool/main/i/incus/"$(curl https://pkgs.zabbly.com/incus/stable/pool/main/i/incus/ | grep -E incus-ui-canonical | cut -d '"' -f 2 | sort -r | head -1)"
+    # curl -Lo /tmp/incus-ui-canonical.deb \
+    #     https://pkgs.zabbly.com/incus/stable/pool/main/i/incus/"$(curl https://pkgs.zabbly.com/incus/stable/pool/main/i/incus/ | grep -E incus-ui-canonical | cut -d '"' -f 2 | sort -r | head -1)"
 
-    ar -x --output=/tmp /tmp/incus-ui-canonical.deb
-    tar --zstd -xvf /tmp/data.tar.zst
-    mv /opt/incus /usr/lib/
-    sed -i 's@\[Service\]@\[Service\]\nEnvironment=INCUS_UI=/usr/lib/incus/ui/@g' /usr/lib/systemd/system/incus.service
+    # ar -x --output=/tmp /tmp/incus-ui-canonical.deb
+    # tar --zstd -xvf /tmp/data.tar.zst
+    # mv /opt/incus /usr/lib/
+    # sed -i 's@\[Service\]@\[Service\]\nEnvironment=INCUS_UI=/usr/lib/incus/ui/@g' /usr/lib/systemd/system/incus.service
 
-    # Groups
-    groupmod -g 250 incus-admin
-    groupmod -g 251 incus
-# end
+    # # Groups
+    # groupmod -g 250 incus-admin
+    # groupmod -g 251 incus
+# end Alternative
 
-    systemctl enable incus.service
+    systemctl enable incus
+    systemctl enable incus-user.socket
     systemctl enable incus-init.service
 fi
-
