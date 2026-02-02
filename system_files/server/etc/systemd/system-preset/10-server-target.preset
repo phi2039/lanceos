@@ -1,0 +1,3 @@
+disable zincati
+enable cockpit.service
+enable podman.socket
