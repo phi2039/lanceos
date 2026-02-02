@@ -82,9 +82,9 @@ build $target="server" $variant="hci" $configuration="nvidia" $tag="stable":
         --tag "${github_package_name}-${target_image}:${target_tag}" \
         {{ justfile_dir() }}
 
-    podman tag ${github_package_name}-${target_image}:${target_tag} \
-        ghcr.io/${repo_organization}/${github_package_name}-${target_image}:${target_tag} \
-        ghcr.io/${repo_organization}/${github_package_name}-${target_image}:${target_tag}.$(date -u +%Y\-%m\-%d)
+    # podman tag ${github_package_name}-${target_image}:${target_tag} \
+    #     ghcr.io/${repo_organization}/${github_package_name}-${target_image}:${target_tag} \
+    #     ghcr.io/${repo_organization}/${github_package_name}-${target_image}:${target_tag}.$(date -u +%Y\-%m\-%d)
     podman images "${github_package_name}-${target_image}"
 
 # Create or start a Podman Machine instance
@@ -93,55 +93,73 @@ create-machine $machine_name="podman-machine-default":
     #!/usr/bin/env bash
     set ${SET_X:+-x} -eou pipefail
 
+    echo "Checking for rootful Podman machine '$machine_name'..."
     if podman machine inspect podman-machine-default &> /dev/null; then
-        if podman machine list --format '{{{{.Name}}\t{{{{.Running}}' &> /dev/null | grep -w "$machine_name" | grep -w "true"; then
-            echo "Machine exists and is already running."
+        if podman machine list --format '{{{{.Name}}\t{{{{.Running}}' | grep -w "$machine_name" | grep -w "true"; then
+            echo "Rootful machine exists and is running."
             exit 0
         fi
-        echo "Machine already exists but is not running...starting it"
+        echo "Rootful machine already exists but is not running...starting it"
         podman machine start $machine_name
     else
-        echo "Creating machine..."
+        echo "Creating rootful machine '$machine_name'..."
         podman machine init --rootful --now $machine_name
     fi
 
 # Run a virtual machine using Podman and QEMU
 [group('Run Virtal Machine')]
+[arg("replace", long="replace", value="true", help="Replace exiting VM instead of erroring out")]
 run-vm $target="server" $variant="hci" $configuration="nvidia" $tag="stable" replace="false":
     #!/usr/bin/env bash
     set ${SET_X:+-x} -eou pipefail
 
     PODMAN_MACHINE_CONNECTION=${PODMAN_MACHINE_CONNECTION:-}
 
-    # Make sure the VM exists and is running
+    # Make sure the rootful Podman machine exists and is running
     just create-machine
 
     # Determine Podman machine connection
     # TODO: Identify default instance that bootc-podman will select automatically?
-    # ... or just set CONTAINER_HOST?
+    # ... or just set CONTAINER_CONNECTION?
     if [[ -z "$PODMAN_MACHINE_CONNECTION" ]]; then
         PODMAN_MACHINE_CONNECTION=$(podman system connection list --format '{{{{.Name}}\t{{{{.URI}}' | grep "root@" | awk '{print $1}')
     fi
 
-    echo "Copying image to Podman machine..."
-    image_name="${os_name}-${target}-${variant}-${configuration}"
-    podman image scp ${image_name}:${tag} ${PODMAN_MACHINE_CONNECTION}::
+    # TODO: Build image if not present
+    # TODO: Only copy image if not already present in Podman machine
+    image_name=$(just get-image-name {{ target }} {{ variant }} {{ configuration }} {{ tag }})
+    local_image_info=$(podman --connection podman-machine-default image inspect ${image_name} --format '{{{{index .Config.Labels "ostree.final-diffid"}}')
+    # rootful_image_info=$(podman --connection $PODMAN_MACHINE_CONNECTION image inspect ${image_name} --format '{{{{index .Config.Labels "ostree.final-diffid"}}') || true
+    rootful_image_info=false
+    if [[ "$local_image_info" != "$rootful_image_info" ]]; then
+        echo "Image digests differ or image not found in Podman machine, copying image..."
+        podman image scp ${image_name} ${PODMAN_MACHINE_CONNECTION}::
+    else
+        echo "Image already present in Podman machine with matching digest."
+    fi
 
-    # TODO: If 'replace' is true, check for already-running VM and kill it before starting a new one
-    podman-bootc run --background --filesystem xfs localhost/${image_name}:${tag}
-
-    # Build the image if it does not exist
-    # if [[ ! -f "${image_file}" ]]; then
-    #     just "build-${type}" "$target_image" "$tag"
-    # fi
+    # Check for already-running VM and kill it before starting a new one or exit
+    POD_ID=$(podman-bootc list | grep "$image_name " | awk '{print $1}') || true
+    if [[ ! -z $POD_ID ]]; then
+        echo "VM for image '$image_name' is already running."
+        if [[ "{{replace}}" == "true" ]]; then
+            echo "Removing existing VM..."
+            podman-bootc rm $POD_ID --force
+        else
+            echo "Use --replace to remove existing VM."
+            exit 0
+        fi
+    fi
+    echo "Starting VM for image '$image_name'..."
+    podman-bootc run --background --filesystem xfs localhost/${image_name}
 
 # Connect to a running Podman bootc VM
+[group('Run Virtal Machine')]
 connect-vm $target="server" $variant="hci" $configuration="nvidia" $tag="stable":
     #!/usr/bin/env bash
     set ${SET_X:+-x} -eou pipefail
 
     image_name=$(just get-image-name {{ target }} {{ variant }} {{ configuration }} {{ tag }})
-    echo $image_name
     POD_ID=$(podman-bootc list | grep "$image_name " | awk '{print $1}')
     if [[ -z $POD_ID ]]; then
         echo "No running VM found for image '$image_name'."
@@ -149,6 +167,7 @@ connect-vm $target="server" $variant="hci" $configuration="nvidia" $tag="stable"
     fi
     podman-bootc ssh $POD_ID
 
+[group('Run Virtal Machine')]
 stop-vm $target="server" $variant="hci" $configuration="nvidia" $tag="stable":
     #!/usr/bin/env bash
     set ${SET_X:+-x} -eou pipefail
