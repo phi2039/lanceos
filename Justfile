@@ -113,10 +113,24 @@ run-vm $target="server" $variant="hci" $configuration="nvidia" $tag="stable" rep
     #!/usr/bin/env bash
     set ${SET_X:+-x} -eou pipefail
 
-    PODMAN_MACHINE_CONNECTION=${PODMAN_MACHINE_CONNECTION:-}
-
     # Make sure the rootful Podman machine exists and is running
     just create-machine
+
+    image_name=$(just get-image-name {{ target }} {{ variant }} {{ configuration }} {{ tag }})
+    # Check for already-running VM and kill it before starting a new one or exit
+    POD_ID=$(podman-bootc list | grep "$image_name " | awk '{print $1}') || true
+    if [[ ! -z $POD_ID ]]; then
+        echo "VM for image '$image_name' is already running."
+        if [[ "{{replace}}" == "true" ]]; then
+            echo "Removing existing VM..."
+            podman-bootc rm $POD_ID --force
+        else
+            echo "Use --replace to remove existing VM."
+            exit 0
+        fi
+    fi
+
+    PODMAN_MACHINE_CONNECTION=${PODMAN_MACHINE_CONNECTION:-}
 
     # Determine Podman machine connection
     # TODO: Identify default instance that bootc-podman will select automatically?
@@ -125,17 +139,20 @@ run-vm $target="server" $variant="hci" $configuration="nvidia" $tag="stable" rep
         PODMAN_MACHINE_CONNECTION=$(podman system connection list --format '{{{{.Name}}\t{{{{.URI}}' | grep "root@" | awk '{print $1}')
     fi
 
-    # TODO: Build image if not present
-    # TODO: Only copy image if not already present in Podman machine
-    image_name=$(just get-image-name {{ target }} {{ variant }} {{ configuration }} {{ tag }})
-    local_image_info=$(podman --connection podman-machine-default image inspect ${image_name} --format '{{{{index .Config.Labels "ostree.final-diffid"}}')
-    # rootful_image_info=$(podman --connection $PODMAN_MACHINE_CONNECTION image inspect ${image_name} --format '{{{{index .Config.Labels "ostree.final-diffid"}}') || true
-    rootful_image_info=false
-    if [[ "$local_image_info" != "$rootful_image_info" ]]; then
-        echo "Image digests differ or image not found in Podman machine, copying image..."
+    # Only copy image if not already present in Podman machine (compare build timestamps)
+    local_created=$(podman inspect "${image_name}" --format '{{{{.Config.Labels}}' 2>/dev/null | grep -oP 'org\.opencontainers\.image\.created:\K[^ \]]+' || echo "")
+    remote_created=$(podman --connection "${PODMAN_MACHINE_CONNECTION}" inspect "${image_name}" --format '{{{{.Config.Labels}}' 2>/dev/null | grep -oP 'org\.opencontainers\.image\.created:\K[^ \]]+' || echo "")
+
+    if [[ -z "$local_created" ]]; then
+        echo "Error: Local image '${image_name}' not found. Please build it first."
+        exit 1
+    fi
+
+    if [[ "$local_created" != "$remote_created" ]]; then
+        echo "Copying image '${image_name}' to rootful machine..."
         podman image scp ${image_name} ${PODMAN_MACHINE_CONNECTION}::
     else
-        echo "Image already present in Podman machine with matching digest."
+        echo "Image '${image_name}' already exists on rootful machine with matching build timestamp. Skipping copy."
     fi
 
     # Check for already-running VM and kill it before starting a new one or exit
