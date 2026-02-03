@@ -213,10 +213,6 @@ remove-vm $target="server" $variant="hci" $configuration="nvidia" $tag="stable" 
     echo {{force}}
     podman-bootc rm $POD_ID $(if [[ "{{force}}" == "true" ]]; then echo "--force"; fi)
 
-#TODO: Create recipe to start VM if not running
-
-#TODO: Create recipe to clean-up VMs
-
 # Generate an image name from target, variant, configuration, and tag
 # Returns: {os_name}-{target}[-{variant}][-{configuration}][:{tag}]
 # Empty variant/configuration are omitted from the name
@@ -273,38 +269,6 @@ format:
     # Run shfmt on all Bash scripts
     /usr/bin/find . -iname "*.sh" -type f -exec shfmt --write "{}" ';'
 
-# Verify Container with Cosign
-[group('Utility')]
-verify-container container="" registry="ghcr.io/ublue-os" key="":
-    #!/usr/bin/env bash
-    set ${SET_X:+-x} -eou pipefail
-    # Get Cosign if Needed
-    if [[ ! $(command -v cosign) ]]; then
-        COSIGN_CONTAINER_ID=$({{ SUDOIF }} podman create ghcr.io/sigstore/cosign/cosign:v2.6.1 bash)
-        {{ SUDOIF }} podman cp "${COSIGN_CONTAINER_ID}":/ko-app/cosign /usr/local/bin/cosign
-        {{ SUDOIF }} podman rm -f "${COSIGN_CONTAINER_ID}"
-    fi
-
-    # Verify Cosign Image Signatures if needed
-    if [[ -n "${COSIGN_CONTAINER_ID:-}" ]]; then
-        if ! cosign verify --certificate-oidc-issuer=https://token.actions.githubusercontent.com --certificate-identity=https://github.com/chainguard-images/images/.github/workflows/release.yaml@refs/heads/main cgr.dev/chainguard/cosign >/dev/null; then
-            echo "NOTICE: Failed to verify cosign image signatures."
-            exit 1
-        fi
-    fi
-
-    # Public Key for Container Verification
-    key={{ key }}
-    if [[ -z "${key:-}" && "{{ registry }}" == "ghcr.io/ublue-os" ]]; then
-        key="https://raw.githubusercontent.com/ublue-os/main/main/cosign.pub"
-    fi
-
-    # Verify Container using cosign public key
-    if ! cosign verify --key "${key}" "{{ registry }}"/"{{ container }}" >/dev/null; then
-        echo "NOTICE: Verification failed. Please ensure your public key is correct."
-        exit 1
-    fi
-
     # Check Just Syntax
 [group('Just')]
 check:
@@ -326,82 +290,3 @@ fix:
     done
     echo "Checking syntax: Justfile"
     just --unstable --fmt -f Justfile || { exit 1; }
-
-# Clean Repo
-[group('Utility')]
-clean:
-    #!/usr/bin/bash
-    set -eoux pipefail
-    touch _build
-    find *_build* -exec rm -rf {} \;
-    rm -f previous.manifest.json
-    rm -f changelog.md
-    rm -f output.env
-    rm -f output/
-
-# Sudo Clean Repo
-[group('Utility')]
-[private]
-sudo-clean:
-    just sudoif just clean
-
-# sudoif bash function
-[group('Utility')]
-[private]
-sudoif command *args:
-    #!/usr/bin/env bash
-    #!/usr/bin/bash/
-    function sudoif(){
-        if [[ "${UID}" -eq 0 ]]; then
-            "$@"
-        elif [[ "$(command -v sudo)" && -n "${SSH_ASKPASS:-}" ]] && [[ -n "${DISPLAY:-}" || -n "${WAYLAND_DISPLAY:-}" ]]; then
-            /usr/bin/sudo --askpass "$@" || exit 1
-        elif [[ "$(command -v sudo)" ]]; then
-            /usr/bin/sudo "$@" || exit 1
-        else
-            exit 1
-        fi
-    }
-    sudoif {{ command }} {{ args }}
-
-# Command: _rootful_load_image
-# Description: This script checks if the current user is root or running under sudo. If not, it attempts to resolve the image tag using podman inspect.
-#              If the image is found, it loads it into rootful podman. If the image is not found, it pulls it from the repository.
-#
-# Steps:
-# 1. Check if the script is already running as root or under sudo.
-# 2. Check if target image is in the non-root podman container storage)
-# 3. If the image is found, load it into rootful podman using podman scp.
-# 4. If the image is not found, pull it from the remote repository into reootful podman.
-# TODO: Extract the useful bits from this
-_rootful_load_image $target_image=os_name $tag=default_tag:
-    #!/usr/bin/env bash
-    # set -eoux pipefail
-
-    # # Check if already running as root or under sudo
-    # if [[ -n "${SUDO_USER:-}" || "${UID}" -eq "0" ]]; then
-    #     echo "Already root or running under sudo, no need to load image from user podman."
-    #     exit 0
-    # fi
-
-    # # Try to resolve the image tag using podman inspect
-    # set +e
-    # resolved_tag=$(podman inspect -t image "${target_image}:${tag}" | jq -r '.[].RepoTags.[0]')
-    # return_code=$?
-    # set -e
-
-    # USER_IMG_ID=$(podman images --filter reference="${target_image}:${tag}" --format "'{{ '{{.ID}}' }}'")
-
-    # if [[ $return_code -eq 0 ]]; then
-    #     # If the image is found, load it into rootful podman
-    #     ID=$(just sudoif podman images --filter reference="${target_image}:${tag}" --format "'{{ '{{.ID}}' }}'")
-    #     if [[ "$ID" != "$USER_IMG_ID" ]]; then
-    #         # If the image ID is not found or different from user, copy the image from user podman to root podman
-    #         COPYTMP=$(mktemp -p "${PWD}" -d -t _build_podman_scp.XXXXXXXXXX)
-    #         just sudoif TMPDIR=${COPYTMP} podman image scp ${UID}@localhost::"${target_image}:${tag}" root@localhost::"${target_image}:${tag}"
-    #         rm -rf "${COPYTMP}"
-    #     fi
-    # else
-    #     # If the image is not found, pull it from the repository
-    #     just sudoif podman pull "${target_image}:${tag}"
-    # fi
