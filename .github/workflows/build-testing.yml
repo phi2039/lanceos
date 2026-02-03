@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-stable:
+  build-testing:
     uses: ./.github/workflows/reusable-build.yml
     secrets: inherit
     with:
