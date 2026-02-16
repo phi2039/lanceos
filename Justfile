@@ -1,14 +1,9 @@
 
-export default_tag := env("DEFAULT_TAG", "latest")
-
 export repo_organization := env("GITHUB_REPOSITORY_OWNER", "phi2039")
 export os_name := env("OS_NAME", "lanceos")
 
-export github_package_name := "lanceos"
 repo_name := "phi2039"
 
-export SUDO_DISPLAY := if `if [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then echo true; fi` == "true" { "true" } else { "false" }
-export SUDOIF := if `id -u` == "0" { "" } else if SUDO_DISPLAY == "true" { "sudo --askpass" } else { "sudo" }
 export SET_X := if `id -u` == "0" { "1" } else { env('SET_X', '') }
 
 [private]
@@ -69,12 +64,12 @@ build target="server" variant="hci" configuration="nvidia" tag="stable":
     LABELS=()
     LABELS+=("--label" "org.opencontainers.image.created=$(date -u +%Y\-%m\-%d\T%H\:%M\:%S\Z)")
     LABELS+=("--label" "org.opencontainers.image.description=${IMAGE_DESC:+""}")
-    LABELS+=("--label" "org.opencontainers.image.documentation=https://raw.githubusercontent.com/${repo_organization}/${github_package_name}-${target_image}/refs/heads/main/README.md")
-    LABELS+=("--label" "org.opencontainers.image.source=https://raw.githubusercontent.com/${repo_organization}/${github_package_name}-${target_image}/refs/heads/main/Containerfile")
-    LABELS+=("--label" "org.opencontainers.image.title=${github_package_name}-${target_image}")
-    LABELS+=("--label" "org.opencontainers.image.url=https://github.com/${repo_organization}/${github_package_name}-${target_image}")
+    LABELS+=("--label" "org.opencontainers.image.documentation=https://raw.githubusercontent.com/${repo_organization}/${os_name}-${target_image}/refs/heads/main/README.md")
+    LABELS+=("--label" "org.opencontainers.image.source=https://raw.githubusercontent.com/${repo_organization}/${os_name}-${target_image}/refs/heads/main/Containerfile")
+    LABELS+=("--label" "org.opencontainers.image.title=${os_name}-${target_image}")
+    LABELS+=("--label" "org.opencontainers.image.url=https://github.com/${repo_organization}/${os_name}-${target_image}")
     LABELS+=("--label" "org.opencontainers.image.vendor=${repo_organization}")
-    LABELS+=("--label" "org.opencontainers.image.version=${github_package_name}-${target_image}.$(date -u +%Y\-%m\-%d)")
+    LABELS+=("--label" "org.opencontainers.image.version=${os_name}-${target_image}.$(date -u +%Y\-%m\-%d)")
     LABELS+=("--label" "containers.bootc=1")
 
     podman build \
@@ -82,14 +77,14 @@ build target="server" variant="hci" configuration="nvidia" tag="stable":
         "${BUILD_ARGS[@]}" \
         "${LABELS[@]}" \
         --pull=newer \
-        --tag "${github_package_name}-${target_image}:${target_tag}" \
+        --tag "${os_name}-${target_image}:${target_tag}" \
         {{ justfile_dir() }}
 
-    podman tag ${github_package_name}-${target_image}:${target_tag} \
-        ${github_package_name}-${target_image}:$(date -u +%Y%m%d) \
-        ${github_package_name}-${target_image}:${target_tag}.$(date -u +%Y%m%d)
-    podman images "${github_package_name}-${target_image}"
-
+    podman tag ${os_name}-${target_image}:${target_tag} \
+        ghcr.io/${repo_organization}/${os_name}-${target_image}:${target_tag} \
+        ghcr.io/${repo_organization}/${os_name}-${target_image}:$(date -u +%Y%m%d) \
+        ghcr.io/${repo_organization}/${os_name}-${target_image}:${target_tag}.$(date -u +%Y%m%d)
+    podman images "${os_name}-${target_image}"
 # Create or start a Podman Machine instance
 [group('Run Virtal Machine')]
 create-machine $machine_name="podman-machine-default":
