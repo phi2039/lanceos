@@ -67,10 +67,10 @@ jobs:
           #   variant: dx
           #   configuration: ""
           #   image_name: lanceos-desktop-dx
-          - target: desktop
-            variant: developer
-            configuration: legion-nvidia
-            image_name: lanceos-desktop-dx-legion-nvidia
+          # - target: desktop
+          #   variant: developer
+          #   configuration: legion-nvidia
+          #   image_name: lanceos-desktop-dx-legion-nvidia
           # - target: desktop
           #   variant: dx
           #   configuration: nvidia
