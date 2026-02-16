@@ -23,7 +23,11 @@ default:
 #   $configuration
 #   $tag
 #
-# WIP
+# WIP[arg("bar", long="bar")]
+[arg("target", long="target")]
+[arg("variant", long="variant")]
+[arg("configuration", long="configuration")]
+[arg("tag", long="tag")]
 build $target="server" $variant="hci" $configuration="nvidia" $tag="stable":
     #!/usr/bin/env bash
 
