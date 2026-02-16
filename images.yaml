@@ -39,7 +39,7 @@ images:
         - name: developer
           upstream-image: ghcr.io/ublue-os/bluefin-dx
           configurations:
-            - name: nvidia
+            - name: legion-nvidia
               upstream-image: ghcr.io/ublue-os/bluefin-dx-nvidia-open
         - name: workstation
           upstream-image: ghcr.io/ublue-os/aurora
