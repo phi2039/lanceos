@@ -1,5 +1,6 @@
 ---
 name: Build container image
+
 on:
   workflow_call:
     inputs:
@@ -21,14 +22,11 @@ on:
         type: string
   workflow_dispatch:
 
-
 env:
   IMAGE_DESC: "LanceOS Image"
   IMAGE_KEYWORDS: "bootc,ublue,universal-blue"
   IMAGE_LOGO_URL: "https://avatars.githubusercontent.com/u/120078124?s=200&v=4"  # Put your own image here for a fancy profile on https://artifacthub.io/!
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"  # do not edit
-
-  IMAGE_NAME: "${{ github.event.repository.name }}"  # output image name, usually same as repo name
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -86,7 +84,6 @@ jobs:
           #   variant: workstation
           #   configuration: legion-nvidia
           #   image_name: lanceos-desktop-workstation-legion-nvidia
-
           # gaming target
           # - target: gaming
           #   variant: desktop
@@ -118,7 +115,6 @@ jobs:
         run: |
           # Lowercase the image uri and set matrix-derived image name
           echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
-          echo "IMAGE_NAME=${{ matrix.image_name }}" >> ${GITHUB_ENV}
 
 
       # These stage versions are pinned by https://github.com/renovatebot/renovate
