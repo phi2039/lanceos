@@ -9,7 +9,7 @@ echo "Running server packages scripts..."
 $DNF -y install cockpit-ostree
 
 wget https://github.com/coder/coder/releases/download/v2.29.6/coder_2.29.6_linux_amd64.rpm
-$DNF -y install coder_2.29.6_linux_amd64.rpm
+$DNF -y install ./coder_2.29.6_linux_amd64.rpm
 rm coder_2.29.6_linux_amd64.rpm
 
 # Install packages and dependencies
