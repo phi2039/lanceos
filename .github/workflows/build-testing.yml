@@ -11,6 +11,10 @@ jobs:
   build-testing:
     uses: ./.github/workflows/reusable-build.yml
     secrets: inherit
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     with:
       target: server
       variant: hci
