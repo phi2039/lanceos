@@ -87,6 +87,7 @@ build target="server" variant="hci" configuration="nvidia" tag="stable":
 
     podman tag ${github_package_name}-${target_image}:${target_tag} \
         ghcr.io/${repo_organization}/${github_package_name}-${target_image}:${target_tag} \
+        ghcr.io/${repo_organization}/${github_package_name}-${target_image}:$(date -u +%Y\-%m\-%d) \
         ghcr.io/${repo_organization}/${github_package_name}-${target_image}:${target_tag}.$(date -u +%Y\-%m\-%d)
     podman images "${github_package_name}-${target_image}"
 
