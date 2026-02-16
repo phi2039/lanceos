@@ -18,17 +18,16 @@ default:
 # Build a container image using Podman.
 #
 # Arguments:
-#   $target
-#   $variant
-#   $configuration
-#   $tag
+#   target
+#   variant
+#   configuration
+#   tag
 #
-# WIP[arg("bar", long="bar")]
 [arg("target", long="target")]
 [arg("variant", long="variant")]
 [arg("configuration", long="configuration")]
 [arg("tag", long="tag")]
-build $target="server" $variant="hci" $configuration="nvidia" $tag="stable":
+build target="server" variant="hci" configuration="nvidia" tag="stable":
     #!/usr/bin/env bash
 
     set ${SET_X:+-x} -eou pipefail
