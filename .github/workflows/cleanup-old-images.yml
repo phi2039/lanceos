@@ -18,7 +18,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           older-than: 90 days
           delete-orphaned-images: true
-          # packages: bos
+          packages: lanceos-*
+          expand-packages: true
           # keep-n-tagged: 7
           # keep-n-untagged: 7
           # dry-run: true
