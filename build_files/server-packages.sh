@@ -8,9 +8,24 @@ echo "Running server packages scripts..."
 
 $DNF -y install cockpit-ostree
 
-curl --fail --retry 5 --retry-delay 5 --retry-all-errors -sL https://github.com/coder/coder/releases/download/v2.29.6/coder_2.29.6_linux_amd64.rpm -o coder_2.29.6_linux_amd64.rpm
-$DNF -y install ./coder_2.29.6_linux_amd64.rpm
-rm coder_2.29.6_linux_amd64.rpm
+CODER_FALLBACK_VERSION="v2.30.4"
+CODER_REPO_NAME="coder/coder"
+CODER_VERSION=$(curl --silent "https://api.github.com/repos/$CODER_REPO_NAME/releases/latest" | jq -r .tag_name)
+if [[ "$CODER_VERSION" == "null" || "$CODER_VERSION" == "" ]]; then CODER_VERSION=$CODER_FALLBACK_VERSION ; fi
+
+CODER_VERSION_REGEX="([0-9]{1,2})\\.([0-9]{1,2})\\.([0-9]{1,2})"
+if [[ "$CODER_VERSION" =~ $CODER_VERSION_REGEX ]]; then
+    CODER_RELEASE_URL="https://github.com/coder/coder/releases/download/$CODER_VERSION/coder_${BASH_REMATCH[0]}_linux_amd64.rpm"
+    CODER_RPM_FILE="coder_${BASH_REMATCH[0]}_linux_amd64.rpm"
+    echo "Detected Coder version: ${BASH_REMATCH[0]}"
+else
+    echo "Unable to identify Coder release"
+fi
+
+curl --fail --retry 5 --retry-delay 5 --retry-all-errors -sL $CODER_RELEASE_URL -o $CODER_RPM_FILE
+echo "Downloaded $CODER_RPM_FILE"
+$DNF -y install "./$CODER_RPM_FILE"
+rm $CODER_RPM_FILE
 
 # Install packages and dependencies
 if [[ ${VARIANT_NAME} =~ hci ]]; then
