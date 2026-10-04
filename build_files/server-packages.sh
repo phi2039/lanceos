@@ -8,7 +8,7 @@ echo "Running server packages scripts..."
 
 $DNF -y install cockpit-ostree
 
-CODER_FALLBACK_VERSION="v2.30.4"
+CODER_FALLBACK_VERSION="v2.36.6"
 CODER_REPO_NAME="coder/coder"
 CODER_VERSION=$(curl --silent "https://api.github.com/repos/$CODER_REPO_NAME/releases/latest" | jq -r .tag_name)
 if [[ "$CODER_VERSION" == "null" || "$CODER_VERSION" == "" ]]; then CODER_VERSION=$CODER_FALLBACK_VERSION ; fi
